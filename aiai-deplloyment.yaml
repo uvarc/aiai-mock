@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: aiai-app
+  name: aiai-app
+  namespace: aiai-ml-curvex-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiai-app
+  template:
+    metadata:
+      labels:
+        app: aiai-app
+    spec:
+      containers:
+      - image: quay.io/jitesoft/nginx
+        name: aiai-app
+        imagePullPolicy: "Always"
+        volumeMounts:
+        - mountPath: /home
+          name: home
+      volumes:
+      - name: home
+        hostPath:
+          path: /home
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: aiai-app
+  name: aiai-app-service
+  namespace: aiai-ml-curvex-dev
+spec:
+  ports:
+    - name: "aiai-app-port"
+      port: 80
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: aiai-app
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+  name: aiai-app
+  namespace: aiai-ml-curvex-dev
+spec:
+  rules:
+  - host: aiai-app.uvarc.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: aiai-app-service
+          servicePort: 80
